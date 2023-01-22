@@ -16,6 +16,18 @@
 
 #include QMK_KEYBOARD_H
 
+
+//TIMEOUT FUNCTIONS
+// Backlight timeout feature
+#define BACKLIGHT_TIMEOUT 10    // in minutes
+static uint16_t idle_timer = 0;
+static uint8_t halfmin_counter = 0;
+static uint8_t old_backlight_level = -1;
+static bool led_on = true;
+
+
+
+
 // clang-format off
 
 enum layers{
@@ -70,3 +82,47 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [WIN_FN]   = { ENCODER_CCW_CW(RGB_VAD, RGB_VAI) }
 };
 #endif // ENCODER_MAP_ENABLE
+
+
+
+
+
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        #ifdef BACKLIGHT_ENABLE
+            if (led_on == false || old_backlight_level == -1) {
+                if (old_backlight_level == -1) old_backlight_level = get_backlight_level();
+                backlight_set(old_backlight_level);
+                led_on = true;
+            }
+        #endif
+        idle_timer = timer_read();
+        halfmin_counter = 0;
+    }
+    return true;
+  }
+
+
+void matrix_scan_user(void) {
+    // idle_timer needs to be set one time
+    if (idle_timer == 0) idle_timer = timer_read();
+
+    #ifdef BACKLIGHT_ENABLE
+        if ( led_on && timer_elapsed(idle_timer) > 30000) {
+            halfmin_counter++;
+            idle_timer = timer_read();
+        }
+
+        if ( led_on && halfmin_counter >= BACKLIGHT_TIMEOUT * 2) {
+            old_backlight_level = get_backlight_level();
+            backlight_set(0);
+            led_on = led_on;
+            led_on = false;
+            halfmin_counter = 0;
+        }
+    #endif
+}
+
+
+
