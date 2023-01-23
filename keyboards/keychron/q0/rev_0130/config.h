@@ -22,3 +22,10 @@
 
 /* Enable num-lock LED */
 #define NUM_LOCK_LED_INDEX 4
+
+/* In your config.h define a new variable RGBLIGHT_TIMEOUT and give it a value in milliseconds */
+//https://gist.github.com/aashreys/01cb34605a290a7cfb94a856bdabc94c
+#define RGBLIGHT_SLEEP  // allows us to use rgblight_suspend() and rgblight_wakeup() in keymap.c
+#define RGBLIGHT_TIMEOUT 3000  // 3 seconds
+
+
